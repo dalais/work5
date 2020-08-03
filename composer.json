@@ -1,0 +1,16 @@
+{
+    "name": "user/work5",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Dalay Salchak",
+            "email": "okeanol777@gmail.com"
+        }
+    ],
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    }
+}
