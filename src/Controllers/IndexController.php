@@ -8,8 +8,7 @@ class IndexController
 {
     public function index()
     {
-        $user = User::findByID(8);
-        var_dump($user);
-        exit;
+        $user = User::findByID(9);
+        var_dump($user->delete());
     }
 }

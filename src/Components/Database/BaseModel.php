@@ -6,8 +6,17 @@ use App\Components\Interfaces\ModelInterface;
 
 class BaseModel implements ModelInterface
 {
-    private $id;
+    /**
+     * @var array $original_properties
+     */
+    private $original_properties = [];
 
+    /**
+     * @var array $changed_properties
+     */
+    private $changed_properties = [];
+
+    private $meta = [];
 
     /**
      * @return \PDO
@@ -17,46 +26,115 @@ class BaseModel implements ModelInterface
         return Db::getInstance()->conn();
     }
 
+    /**
+     * Получаем название таблицы
+     *
+     * @return string
+     */
     private static function table()
     {
         return strtolower(preg_replace('/^(\w+\\\)*/', '', static::class)) . "s";
     }
 
-    /*public function save()
+    /**
+     * Перевод типов столбцов, полученных посредством PDO
+     * в типы понятные для php
+     *
+     * @param $orig
+     * @return mixed
+     */
+    private static function translateNativeType($orig)
     {
-        $props = $this->changed_properties;
-        unset($this->changed_properties);
-        $user = [];
-        foreach ($this as $key => $value) {
-            $user[$key] = $value;
-        }
-        if (!empty($props)) {
-            foreach ($props as $item) {
-                foreach ($item as $key => $value) {
-                    if ($value === '' || $key === 'id') {
-                        continue;
-                    }
-                    $user[$key] = $value;
+        $trans = array(
+            'VAR_STRING' => 'string',
+            'STRING' => 'string',
+            'BLOB' => 'blob',
+            'LONGLONG' => 'int',
+            'LONG' => 'int',
+            'SHORT' => 'int',
+            'DATETIME' => 'datetime',
+            'DATE' => 'date',
+            'DOUBLE' => 'real',
+            'TIMESTAMP' => 'timestamp'
+        );
+        return $trans[$orig];
+    }
+
+    /**
+     * Сохраняем измененные свойства объекта модели
+     *
+     * @return bool|null
+     */
+    public function save()
+    {
+        $props = $this->original_properties;
+        foreach ($props as $key => $value) {
+            foreach ($this as $k => $v) {
+                if ($key === $k && $value !== $v && $k != 'id') {
+                    $this->changed_properties[$k] = $v;
                 }
             }
         }
-        return $this->findByID($this->id);
-    }*/
+        if (empty($this->changed_properties)) {
+            return null;
+        }
+        $data = $this->changed_properties;
+        $columns = [];
+        foreach (array_keys($data) as $value) {
+            $columns[] = $value . '=:' . $value;
+        }
+        $columnsStr = implode(',', $columns);
+        $data['id'] = $props['id'];
+        $sql = "UPDATE " . self::table() . " SET " . $columnsStr . " WHERE id=:id";
+        $stmt = self::dbConn()->prepare($sql);
+        $stmt->execute($data);
+        if ($stmt->rowCount()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Обновление записей
+     *
+     */
+    public function update()
+    {
+        //TODO
+    }
 
     /**
      * Получить все записи
      *
      * @return array
      **/
-    /*public static function getAll()
+    public static function getAll()
     {
-        $users_ids = array_column(self::db_file(), 'id');
-        $users = [];
-        foreach ($users_ids as $id) {
-            $users[] = self::findByID($id);
+        $stmt = self::dbConn()->prepare("SELECT * FROM " . self::table());
+        $stmt->execute();
+        $multi = $stmt->fetchAll();
+
+        // Получаем метаданные столбцов
+        for ($i = 0; $i < $stmt->columnCount(); $i++) {
+            $mt = $stmt->getColumnMeta($i);
+            $meta[$mt['name']] = $mt;
         }
-        return $users;
-    }*/
+
+        $result = [];
+        $class = static::class;
+        foreach ($multi as $k => $row) {
+            $model = new $class;
+            foreach ($row as $key => $value) {
+                $model->$key = $value;
+            }
+            $model->meta = $meta;
+            $result[$k] = $model;
+        }
+
+        return $result;
+    }
+
 
     /**
      * Выбрать запись по id
@@ -68,6 +146,7 @@ class BaseModel implements ModelInterface
     {
         $single = [];
         $multi = [];
+        $meta = [];
         if (is_int($ids) || is_array($ids) && count($ids) === 1) {
             $stmt = self::dbConn()->prepare("SELECT * FROM " . self::table() . " WHERE id=:id");
             $stmt->bindParam(':id', $ids);
@@ -81,21 +160,31 @@ class BaseModel implements ModelInterface
             $stmt->execute();
             $multi = $stmt->fetchAll();
         }
+
+        // Получаем метаданные столбцов
+        for ($i = 0; $i < $stmt->columnCount(); $i++) {
+            $mt = $stmt->getColumnMeta($i);
+            $meta[$mt['name']] = $mt;
+        }
+
         $result = [];
         $class = static::class;
         if (!empty($single)) {
             $model = new $class;
             foreach ($single as $key => $value) {
+                $model->original_properties[$key] = $value;
                 $model->{$key} = $value;
             }
-            $result[] = $model;
+            $model->meta = $meta;
+            $result = $model;
         }
         if (!empty($multi)) {
             foreach ($multi as $k => $row) {
                 $model = new $class;
                 foreach ($row as $key => $value) {
-                    $model->{$key} = $value;
+                    $model->$key = $value;
                 }
+                $model->meta = $meta;
                 $result[$k] = $model;
             }
 
@@ -108,26 +197,20 @@ class BaseModel implements ModelInterface
     }
 
     /**
-     * Удаление запись по id
+     * Удаление записи из базы данных
      *
-     * @return void
-     **/
-    /*public static function delete($id)
+     * @return bool
+     */
+    public function delete()
     {
-        $user = self::findByID($id);
-        if ($user !== null) {
-            $users = self::db_file();
-            $k = null;
-            foreach ($users as $key => $value) {
-                if ($value['id'] === $user->id) {
-                    $k = $key;
-                }
-            }
-            unset($users[$k]);
-            file_put_contents("users.php", '<?php'.PHP_EOL.'return ' . var_export($users, true) . ';');
-            echo "Пользователь успешно удален";
+        $props = $this->original_properties;
+        $stmt = self::dbConn()->prepare("DELETE FROM " . self::table() . " WHERE id=:id");
+        $stmt->bindParam(':id', $props['id']);
+        $stmt->execute();
+        if ($stmt->rowCount()) {
+            return true;
         } else {
-            echo "Не существует такого пользователя.";
+            return false;
         }
-    }*/
+    }
 }
