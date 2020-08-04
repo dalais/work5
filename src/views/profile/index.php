@@ -1,11 +1,18 @@
 <?php include __DIR__.'/../layout/header.php'; ?>
 
-<header class="masthead">
-    <div class="container">
-        <div class="text-center mt-4 col-sm-4">
-            <?php var_dump($_SESSION);?>
+<!-- Masthead-->
+<header class="masthead bg-primary text-white text-center">
+    <div class="container d-flex align-items-center flex-column">
+        <!-- Masthead Avatar Image-->
+        <img class="masthead-avatar mb-5" src="assets/img/avataaars.svg" alt="" />
+        <!-- Icon Divider-->
+        <div class="divider-custom divider-light">
+            <div class="divider-custom-line"></div>
+            <div class="divider-custom-icon"><i class="fas fa-star"></i></div>
+            <div class="divider-custom-line"></div>
         </div>
-        <hr>
+        <!-- Masthead Subheading-->
+        <p class="masthead-subheading font-weight-light mb-0"><?php echo $user['firstname'] ." ". $user['lastname'] ?> - Email: <?php echo $user['email'] ?></p>
     </div>
 </header>
 
