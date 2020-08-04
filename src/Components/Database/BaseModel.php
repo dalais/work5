@@ -19,6 +19,16 @@ class BaseModel implements ModelInterface
     private $meta = [];
 
     /**
+     * @var \PDO $db
+     */
+    protected $db;
+
+    function __construct()
+    {
+        $this->db = Db::getInstance()->conn();
+    }
+
+    /**
      * @return \PDO
      */
     private static function dbConn()
@@ -103,6 +113,14 @@ class BaseModel implements ModelInterface
     {
         //TODO
     }
+
+    /**
+     * @param array $fields
+     */
+    /*public function create(array $fields)
+    {
+        //TODO
+    }*/
 
     /**
      * Получить все записи
