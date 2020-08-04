@@ -21,5 +21,4 @@
             </div>
         </div>
     </header>
-<?php var_dump($_SESSION);?>
 <?php include __DIR__ . '/../layout/footer.php'; ?>

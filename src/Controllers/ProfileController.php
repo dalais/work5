@@ -12,6 +12,7 @@ class ProfileController extends Controller
 
     public function index()
     {
+        $user = Auth::user();
         include __DIR__ . '/../views/profile/index.php';
     }
 

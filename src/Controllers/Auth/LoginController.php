@@ -21,6 +21,7 @@ class LoginController extends AuthController
         }
         if (empty($this->errors)) {
             // При успешной проверке сохраняем соответствующие данные в сессию
+            foreach ($authData as $value)
             $_SESSION = $authData;
             header("Location: /profile");
         } else {

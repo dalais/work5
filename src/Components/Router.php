@@ -60,7 +60,7 @@ class Router
      */
     public function resolve()
     {
-        $methodDictionary = array_merge($this->get,$this->post);
+        $methodDictionary = $this->{strtolower($this->request->requestMethod)};
         $formatedRoute = $this->formatRoute($this->request->requestUri);
         $route = '';
         foreach (array_keys($methodDictionary) as $routeReg) {
