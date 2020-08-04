@@ -1,3 +1,5 @@
+Ссылка на рабочий пример http://work5.devsky.fvds.ru
+
 `git clone git@github.com:dalais/work5.git`
 
 `composer install`
