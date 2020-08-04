@@ -8,7 +8,16 @@ class IndexController
 {
     public function index()
     {
-        $user = User::findByID(9);
-        var_dump($user->delete());
+        include __DIR__.'/../views/index.php';
+    }
+
+    public function greeting()
+    {
+        include __DIR__.'/../views/greeting.php';
+    }
+
+    public function notfound()
+    {
+        include __DIR__.'/../views/notfound.php';
     }
 }

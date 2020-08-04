@@ -60,7 +60,7 @@ class Router
      */
     public function resolve()
     {
-        $methodDictionary = $this->{strtolower($this->request->requestMethod)};
+        $methodDictionary = array_merge($this->get,$this->post);
         $formatedRoute = $this->formatRoute($this->request->requestUri);
         $route = '';
         foreach (array_keys($methodDictionary) as $routeReg) {
@@ -70,6 +70,7 @@ class Router
                 break;
             }
         }
+
         if (!in_array($formatedRoute, $matches)) {
             header('Location: /notfound');
             return;
