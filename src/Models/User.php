@@ -17,7 +17,7 @@ class User extends BaseModel
      *
      * @param array $fields
      */
-    public function create($fields)
+    public function new($fields)
     {
         $hashedPassword = password_hash($fields['password'], PASSWORD_DEFAULT);
         $firstname = isset($fields['firstname']) ? $fields['firstname'] : null;
@@ -27,15 +27,15 @@ class User extends BaseModel
         $sql = "INSERT INTO users (email, password, firstname, lastname, middlename) 
                     VALUES (:email, :password, :firstname, :lastname, :middlename)";
 
-        $stmt = $this->db->prepare($sql);
-
-        $stmt->bindParam(':email', $fields['email'], \PDO::PARAM_STR);
-        $stmt->bindParam(':password', $hashedPassword, \PDO::PARAM_STR);
-        $stmt->bindParam(':firstname', $firstname);
-        $stmt->bindParam(':lastname', $lastname);
-        $stmt->bindParam(':middlename', $middlename);
-
         try {
+            $stmt = $this->db->prepare($sql);
+
+            $stmt->bindParam(':email', $fields['email'], \PDO::PARAM_STR);
+            $stmt->bindParam(':password', $hashedPassword, \PDO::PARAM_STR);
+            $stmt->bindParam(':firstname', $firstname);
+            $stmt->bindParam(':lastname', $lastname);
+            $stmt->bindParam(':middlename', $middlename);
+
             $stmt->execute();
         } catch (\PDOException $e) {
             echo $e->getMessage();

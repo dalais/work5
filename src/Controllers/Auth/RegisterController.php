@@ -21,7 +21,7 @@ class RegisterController extends AuthController
         $errors = $this->errors;
         if (count($errors) == 0) {
             $newUser = new User();
-            $newUser->create($request->getBody());
+            $newUser->new($request->getBody());
             include __DIR__.'/../../views/greeting.php';
         } else {
             foreach ($this->errors as $key => $error) {
